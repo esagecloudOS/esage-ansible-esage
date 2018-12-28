@@ -1,0 +1,47 @@
+---
+- name: Install Pip
+  yum: name={{ item }} state=present
+  with_items: 
+    - python-pip
+
+- name: Ensure python OpenSSL dependencies are installed.
+  pip:
+    name: pyOpenSSL
+    state: present
+
+- name: Create cert dir
+  file: "path={{ cert_file | dirname }} state=directory"
+
+- name: Generate an OpenSSL private key.
+  openssl_privatekey:
+    path: "{{ key_file }}"
+
+- name: Generate an OpenSSL CSR
+  openssl_csr:
+    path: "{{ csr_file }}"
+    privatekey_path: "{{ key_file }}"
+    common_name: "{{ cert_cn }}"
+    countryName: ES
+    organization_name: Abiquo
+    organizational_unit_name: Engineering
+
+# Had to do this, sorry.
+# Ansible's openssl_certificate does not seem to allow setting the
+# `extensions` flag, and that makes keytool to fail parsing the cert.
+- name: Generate self-signed SSL certificate
+  shell: "openssl req -nodes -x509 -sha256 -days 3650 -in {{ csr_file }} -key {{ key_file }} -out {{ cert_file }} -extensions v3_ca"
+  args:
+     creates: "{{ cert_file }}"
+
+- name: Convert key to pkcs8 format
+  shell: "openssl pkcs8 -v1 PBE-SHA1-3DES -topk8 -in {{ key_file }} -out {{ key_file }}.pkcs8 -passout pass:"
+  args:
+     creates: "{{ key_file }}.pkcs8"
+
+- name: Create cert dir
+  file:
+    path: /etc/rabbitmq/ssl
+    owner: rabbitmq
+    group: rabbitmq
+    recurse: yes
+  when: cert_for_rabbit is defined

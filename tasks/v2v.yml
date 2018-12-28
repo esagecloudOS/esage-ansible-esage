@@ -1,0 +1,16 @@
+---
+- name: Install Abiquo packages for an V2V server
+  yum: name={{ item }} state=present
+  with_items:
+    - jdk
+    - abiquo-v2v
+    - abiquo-sosreport-plugins
+
+- name: Ensure abiquo/config folder exists
+  file: path=/opt/abiquo/config state=directory
+
+- name: Start services
+  service: name={{ item }} state=started enabled=yes
+  with_items:
+    - abiquo-tomcat
+    - rpcbind

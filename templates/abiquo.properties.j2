@@ -1,0 +1,3 @@
+{% for prop, value in abiquo_default_properties|combine(abiquo_properties)|dictsort %}
+{{ prop }} = {{ value }}
+{% endfor %}

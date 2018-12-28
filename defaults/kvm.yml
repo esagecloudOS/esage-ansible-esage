@@ -1,0 +1,8 @@
+---
+abiquo_default_properties:
+  abiquo.vncport.min: 5900
+  abiquo.vncport.max: 5999
+abiquo_fw_allowed_ports:
+  - "{{ abiquo_aim_port }}"
+abiquo_fw_additional_rules:
+  - "iptables -A INPUT -p tcp -m tcp --dport {{ (abiquo_default_properties|combine(abiquo_properties))['abiquo.vncport.min'] }}:{{ (abiquo_default_properties|combine(abiquo_properties))['abiquo.vncport.max'] }} -j ACCEPT"

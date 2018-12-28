@@ -1,0 +1,20 @@
+---
+- name: Install Apache2 httpd Server
+  yum: name={{ item }} state=present
+  with_items: 
+    - httpd
+    - mod_ssl
+
+- name: Enable needed apache modules
+  apache2_module: state=present name={{ item }}
+  with_items:
+    - proxy
+    - proxy_ajp
+    - proxy_http
+
+- name: Apache Abiquo SSL config
+  template: backup=yes dest=/etc/httpd/conf.d/abiquo.conf src=abiquo_ssl.conf.j2
+  notify: restart httpd
+
+- name: Set Apache2 httpd Service enabled at start up
+  service: name=httpd enabled=yes state=started

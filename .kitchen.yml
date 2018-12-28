@@ -1,0 +1,57 @@
+driver:
+  name: vagrant
+  customize:
+    memory: 2048
+
+provisioner:
+  name: ansible_playbook
+  group_vars_path: test/vars
+  require_ansible_repo: true
+  ansible_verbose: true
+  ansible_package_name: ansible
+  requirements_path: requirements.yml
+
+transport:
+  compression: none
+
+platforms:
+  - name: c7
+    driver:
+      box: bento/centos-7
+
+suites:
+  - name: monolithic
+    provisioner:
+      hosts: monolithic
+    driver_config:
+      hostname: 'monolithic'
+  - name: server
+    provisioner:
+      hosts: server
+    driver_config:
+      hostname: 'server'
+  - name: frontend
+    provisioner:
+      hosts: frontend
+    driver_config:
+      hostname: 'frontend'
+  - name: remoteservices
+    provisioner:
+      hosts: remoteservices
+    driver_config:
+      hostname: 'remoteservices'
+  - name: v2v
+    provisioner:
+      hosts: v2v
+    driver_config:
+      hostname: 'v2v'
+  - name: monitoring
+    provisioner:
+      hosts: monitoring
+    driver_config:
+      hostname: 'monitoring'
+  - name: kvm
+    provisioner:
+      hosts: kvm
+    driver_config:
+      hostname: 'kvm'

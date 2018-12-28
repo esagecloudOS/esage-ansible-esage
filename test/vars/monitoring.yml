@@ -1,0 +1,27 @@
+---
+abiquo_profile: monitoring
+abiquo_rabbitmq_password: guest
+abiquo_rabbitmq_username: guest
+abiquo_rabbitmq_vhost: /
+rabbitmq_plugins: []
+rabbitmq_ssl: true
+rabbitmq_selfsigned: true
+rabbitmq_conf_tcp_listeners_address: ''
+rabbitmq_conf_tcp_listeners_port: 5672
+rabbitmq_conf_ssl_listeners_address: '0.0.0.0'
+rabbitmq_conf_ssl_listeners_port: 5671
+rabbitmq_conf_ssl_options_cacertfile: "/etc/rabbitmq/ssl/{{ ansible_fqdn }}.crt"
+rabbitmq_conf_ssl_options_certfile: "/etc/rabbitmq/ssl/{{ ansible_fqdn }}.crt"
+rabbitmq_conf_ssl_options_csrfile: "/etc/rabbitmq/ssl/{{ ansible_fqdn }}.csr"
+rabbitmq_conf_ssl_options_keyfile: "/etc/rabbitmq/ssl/{{ ansible_fqdn }}.key"
+rabbitmq_conf_ssl_options_fail_if_no_peer_cert: "false"
+abiquo_properties:
+  abiquo.rabbitmq.tls.trustallcertificates: "true"
+  abiquo.rabbitmq.tls: "true"
+  emmett.service.ssl: "true"
+  emmett.service.certfile: "{{ monitoring_watchtower_certfile }}"
+  emmett.service.keyfile: "{{ monitoring_watchtower_keyfile }}.pkcs8"
+abiquo_monitoring_rabbitmq_addresses: localhost:5671
+abiquo_monitoring_rabbitmq_username: guest
+abiquo_monitoring_rabbitmq_password: guest
+watchtower_ssl: true

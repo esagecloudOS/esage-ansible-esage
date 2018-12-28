@@ -1,0 +1,35 @@
+---
+- import_tasks: mariadb.yml
+
+- name: Dependency packages
+  yum: name={{ item }} state=present
+  with_items:
+    - unzip
+
+- name: Check replication slave status
+  mysql_replication: mode=getslave
+  ignore_errors: true
+  register: slave
+
+- name: Stop slave
+  mysql_replication: 
+    mode: stopslave
+  when: slave.Is_Slave and slave.Last_Errno != 0
+  register: stoppedslave
+
+- name: Define master in slave
+  mysql_replication: 
+    mode: changemaster
+    master_host: "{{ mariadb_master_host }}"
+    master_user: replicator
+    master_password: +r3pl1c4t0r!!
+  when: (not slave.Is_Slave) or stoppedslave.changed
+
+- name: Set slave GTID
+  command: mysql -e "CHANGE MASTER TO master_use_gtid=current_pos";
+  when: (not slave.Is_Slave) or stoppedslave.changed
+
+- name: Start slave
+  mysql_replication: 
+    mode: startslave
+  when: (not slave.Is_Slave) or stoppedslave.changed

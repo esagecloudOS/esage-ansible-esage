@@ -1,0 +1,10 @@
+<Context>
+  <Resource name="jdbc/abiquoDB" auth="Container" type="javax.sql.DataSource"
+               initialSize="10"  suspectTimeout="60"
+               timeBetweenEvictionRunsMillis="30000"
+               minEvictableIdleTimeMillis="60000"
+               maxActive="100" minIdle="10" maxIdle="50" maxWait="10000"
+               removeAbandoned="true" removeAbandonedTimeout="60" logAbandoned="true"
+               username="{{ abiquo_db_user }}" password="{{ abiquo_db_pass }}"
+               driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://{{ abiquo_jdbc_str }}/kinton?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8"/>
+</Context>

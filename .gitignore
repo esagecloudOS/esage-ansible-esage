@@ -1,0 +1,7 @@
+*.retry
+*.lock
+*.swp
+.kitchen/
+.kitchen.local.yml
+.ruby-version
+.ruby-gemset

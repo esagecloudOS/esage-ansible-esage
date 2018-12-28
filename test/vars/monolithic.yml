@@ -1,0 +1,25 @@
+---
+abiquo_profile: monolithic
+ui_server_name: frontend.bcn.abiquo.com
+ui_apache_opts:
+  KeepAlive: "On"
+  MaxKeepAliveRequests: 100
+  KeepAliveTimeout: 60
+ui_proxies:
+  /api:
+    url: ajp://localhost:8010/api
+  /am:
+    url: ajp://localhost:8010/am
+  /m:
+    url: http://localhost:8009/m
+  /legal:
+    url: ajp://localhost:8010/legal
+  /am2:
+    url: http://some_am:8009/am
+    options:
+      Header: add "Access-Control-Allow-Origin" "*"
+rabbitmq_ssl: true
+abiquo_properties:
+  abiquo.rabbitmq.tls.trustallcertificates: "false"
+  abiquo.rabbitmq.tls: "true"
+  abiquo.rabbitmq.addresses: localhost:5671

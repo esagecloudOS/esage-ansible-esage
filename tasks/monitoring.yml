@@ -1,0 +1,63 @@
+---
+- name: Install Abiquo packages for a monitoring server
+  yum: name={{ item }} state=present
+  with_items:
+    - abiquo-emmett
+    - abiquo-delorean
+    - abiquo-sosreport-plugins
+    - MariaDB-client
+    - jdk
+
+- name: Create watchtower schema.
+  mysql_db:
+    name: watchtower
+    state: present
+    login_host: "{{ abiquo_monitoring_db_host }}"
+    login_port: "{{ abiquo_monitoring_db_port }}"
+    login_user: "{{ abiquo_monitoring_db_user }}"
+    login_password: "{{ abiquo_monitoring_db_pass }}"
+  register: watchtower_created
+
+- name: Ensure MySQL databases are present.
+  mysql_db:
+    name: watchtower
+    state: import
+    login_host: "{{ abiquo_monitoring_db_host }}"
+    login_port: "{{ abiquo_monitoring_db_port }}"
+    login_user: "{{ abiquo_monitoring_db_user }}"
+    login_password: "{{ abiquo_monitoring_db_pass }}"
+    target: /usr/share/doc/abiquo-watchtower/database/src/watchtower-1.0.0.sql
+  when: watchtower_created.changed
+  notify: liquibase watchtower
+
+- name: Abiquo Watchtower properties file
+  template: src=abiquo.properties.j2 dest=/etc/abiquo/watchtower/watchtower.properties
+  notify:
+    - restart emmett
+    - restart delorean
+
+- stat:
+    path: "/etc/abiquo/watchtower/{{ item }}.properties"
+  with_items:
+    - emmett
+    - delorean
+  register: sym
+
+- name: Delete original properties files
+  file:
+    path: "/etc/abiquo/watchtower/{{ item.item }}.properties"
+    state: absent
+  when: item.stat.isreg
+  with_items: "{{ sym.results }}"
+
+- name: Abiquo Watchtower services config file
+  file:
+    dest: "/etc/abiquo/watchtower/{{ item }}.properties"
+    src: /etc/abiquo/watchtower/watchtower.properties
+    state: link
+  with_items:
+    - emmett
+    - delorean
+  notify:
+    - restart emmett
+    - restart delorean

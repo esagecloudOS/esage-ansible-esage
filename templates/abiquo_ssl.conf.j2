@@ -1,0 +1,49 @@
+<VirtualHost *:80>
+    RewriteEngine On
+    RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [L,R=301]
+</VirtualHost>
+
+<VirtualHost *:443>
+    Servername {{ ui_server_name }}
+    Serveralias {{ ui_server_alias }}
+    DocumentRoot "/var/www/html"
+    RewriteEngine On
+    ProxyRequests Off
+    ProxyPreserveHost On
+    ProxyTimeout {{ ui_proxy_timeout }}
+
+    {{ ui_apache_opts_raw }}
+
+{% for opt, val in ui_apache_opts.iteritems() %}
+    {{ opt }} {{ val }}
+{% endfor %}
+ 
+    <Directory "/var/www/html/ui">
+        Options MultiViews FollowSymLinks
+        AllowOverride None
+        Order allow,deny
+        Allow from all
+    </Directory>
+    RewriteRule ^/$ /ui/ [R]
+
+{% for proxy, val in ui_proxies.iteritems() %}
+    <Location {{ proxy }}>
+        ProxyPass {{ val.url }}
+        ProxyPassReverse {{ val.url }}
+{% if val.options is defined %}
+{% for opt, val in val.options.iteritems() %}
+        {{ opt }} {{ val }}
+{% endfor %}
+{% endif %}
+    </Location>
+{% endfor %}
+
+    SSLEngine on
+    SSLProtocol All -SSLv2 -SSLv3
+    SSLCipherSuite EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH
+    SSLCertificateFile {{ ui_cert_file }}
+    SSLCertificateKeyFile {{ ui_cert_key_file }}
+{% if ui_cert_ca_file is defined %}
+    SSLCACertificateFile {{ ui_cert_ca_file }}
+{% endif %}
+</VirtualHost>

@@ -1,0 +1,10 @@
+---
+- include_tasks: apache.yml
+
+- name: Install Abiquo packages for an Abiquo frontend
+  yum: name={{ item }} state=present
+  with_items:
+    - abiquo-ui
+
+- name: Abiquo UI properties
+  template: src=client-config-custom.json.j2 dest=/var/www/html/ui/config/client-config-custom.json

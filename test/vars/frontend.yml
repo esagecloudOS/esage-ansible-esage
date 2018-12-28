@@ -1,0 +1,27 @@
+---
+abiquo_profile: frontend
+ui_server_name: frontend.bcn.abiquo.com
+ui_config:
+  config.endpoint: "https://server.abiquo.com/api"
+  client.backto.url: "http://google.com"
+  client.google.maps.key: "trocotro"
+  client.test.timeout: 600
+  client.themes:
+    - abicloudDefault
+    - someothertheme
+ui_apache_opts:
+  KeepAlive: "On"
+  MaxKeepAliveRequests: 100
+  KeepAliveTimeout: 60
+ui_proxies:
+  /api:
+    url: ajp://serverhost:8010/api
+  /legal:
+    url: ajp://serverhost:8010/legal
+  /cms:
+    url: https://some_cms/blah
+    options:
+      Header: add "Access-Control-Allow-Origin" "*"
+abiquo_properties:
+  abiquo.rabbitmq.tls.trustallcertificates: "false"
+  abiquo.rabbitmq.addresses: localhost:5672

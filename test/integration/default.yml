@@ -1,0 +1,33 @@
+---
+- hosts: "*"
+  handlers:
+  - import_tasks: roles/ansible-abiquo/handlers/rabbitmq.yml
+  tasks:
+  - name: "Set hostname to '{{ ui_server_name }}'"
+    hostname:
+      name: "{{ ui_server_name }}"
+    when: ui_server_name is defined
+  ## https://www.spinics.net/lists/centos-virt/msg05149.html
+  - name: Ensure right content in yum vars
+    copy:
+      content: centos
+      dest: /etc/yum/vars/contentdir
+    when: ansible_architecture == 'x86_64'
+
+  - name: Install facter
+    yum: name=facter state=present
+
+  - include_tasks: roles/ansible-abiquo/tasks/rabbitmq.yml
+    when: abiquo_profile == 'monitoring'
+
+  - include_tasks: roles/ansible-abiquo/tasks/selfsigned.yml
+    vars:
+      cert_file: "{{ rabbitmq_conf_ssl_options_certfile }}"
+      key_file: "{{ rabbitmq_conf_ssl_options_keyfile }}"
+      csr_file: "{{ rabbitmq_conf_ssl_options_csrfile }}"
+      cert_cn: "{{ ansible_fqdn }}"
+      cert_for_rabbit: yes
+    when: abiquo_profile == 'monitoring'
+
+  - include_role:
+      name: ansible-abiquo

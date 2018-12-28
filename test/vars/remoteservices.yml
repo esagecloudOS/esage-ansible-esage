@@ -1,0 +1,4 @@
+---
+abiquo_profile: remoteservices
+abiquo_properties:
+  abiquo.appliancemanager.checkMountedRepository: "false"

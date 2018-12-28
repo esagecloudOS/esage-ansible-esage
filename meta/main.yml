@@ -1,0 +1,16 @@
+---
+dependencies:
+  - src: geerlingguy.firewall
+
+galaxy_info:
+  author: abiquo
+  description: Role to install and configure several components of an Abiquo environment.
+  company: "Abiquo, Inc. LLC"
+  license: "Apache2"
+  min_ansible_version: 2.0
+  platforms:
+  - name: EL
+    versions:
+    - 7
+  galaxy_tags:
+    - abiquo

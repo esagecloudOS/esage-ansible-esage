@@ -1,0 +1,29 @@
+---
+- name: Install Abiquo packages for an RS server
+  yum: name={{ item }} state=present
+  with_items:
+    - abiquo-remote-services
+    - abiquo-sosreport-plugins
+    - jdk
+
+- name: Ensure abiquo/config folder exists
+  file: path=/opt/abiquo/config state=directory
+
+- name: Import SSL certificate from API endpoint into Java keystore
+  java_cert:
+    cert_url: "{{ abiquo_properties['abiquo.server.api.location'] | urlsplit('hostname') }}"
+    keystore_path: /usr/java/default/jre/lib/security/cacerts
+    keystore_pass: changeit
+  notify: restart abiquo-tomcat
+  register: certimported
+  when: abiquo_properties['abiquo.server.api.location'] is defined
+
+- name: RPCbind should be running
+  service: name=rpcbind state=started enabled=yes
+
+- name: Start guacd
+  service: name=guacd state=started enabled=yes
+
+- name: Force tomcat restart for cert import
+  meta: flush_handlers
+  when: certimported.changed

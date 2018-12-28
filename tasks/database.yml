@@ -1,0 +1,67 @@
+---
+- name: Install requirements
+  yum: name=MySQL-python state=present
+
+- name: Create kinton DB user
+  mysql_user:
+    name: "{{ abiquo_db_user }}"
+    password: "{{ abiquo_db_pass }}"
+    host: "{{ item }}"
+    priv: "kinton.*:ALL/kinton_accounting.*:ALL"
+    append_privs: yes
+    login_user: "{{ abiquo_db_login_user }}"
+    login_password: "{{ abiquo_db_login_pass }}"
+    login_host: "{{ abiquo_db_login_host }}"
+    login_port: "{{ abiquo_db_login_port }}"
+  with_items:
+    - localhost
+    - "{{ abiquo_db_from }}"
+  when: abiquo_profile == 'server' or abiquo_profile == 'monolithic'
+
+- name: "Grant SUPER privilege to Abiquo DB user"
+  mysql_user:
+    name: "{{ abiquo_db_user }}"
+    password: "{{ abiquo_db_pass }}"
+    host: "{{ item }}"
+    priv: "*.*:SUPER"
+    append_privs: yes
+    login_user: "{{ abiquo_db_login_user }}"
+    login_password: "{{ abiquo_db_login_pass }}"
+    login_host: "{{ abiquo_db_login_host }}"
+    login_port: "{{ abiquo_db_login_port }}"
+  with_items:
+    - localhost
+    - "{{ abiquo_db_from }}"
+  when: abiquo_profile == 'server' or abiquo_profile == 'monolithic'
+
+- name: Create watchtower DB user
+  mysql_user:
+    name: "{{ abiquo_monitoring_db_user }}"
+    password: "{{ abiquo_monitoring_db_pass }}"
+    host: "{{ item }}"
+    priv: "watchtower.*:ALL"
+    append_privs: yes
+    login_user: "{{ abiquo_db_login_user }}"
+    login_password: "{{ abiquo_db_login_pass }}"
+    login_host: "{{ abiquo_db_login_host }}"
+    login_port: "{{ abiquo_db_login_port }}"
+  with_items:
+    - localhost
+    - "{{ abiquo_monitoring_db_from }}"
+  when: abiquo_profile == 'monitoring'
+
+- name: "Grant SUPER privilege to Abiquo monitoring DB user"
+  mysql_user:
+    name: "{{ abiquo_monitoring_db_user }}"
+    password: "{{ abiquo_monitoring_db_pass }}"
+    host: "{{ item }}"
+    priv: "*.*:SUPER"
+    append_privs: yes
+    login_user: "{{ abiquo_db_login_user }}"
+    login_password: "{{ abiquo_db_login_pass }}"
+    login_host: "{{ abiquo_db_login_host }}"
+    login_port: "{{ abiquo_db_login_port }}"
+  with_items:
+    - localhost
+    - "{{ abiquo_monitoring_db_from }}"
+  when: abiquo_profile == 'monitoring'

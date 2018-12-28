@@ -1,0 +1,79 @@
+---
+- name: Create Base Repo
+  yum_repository:
+    name: abiquo-base
+    description: Abiquo base packages
+    file: abiquo-base
+    baseurl: "{{ abiquo_base_repo }}"
+    gpgcheck: "{{ abiquo_repository_gpg_check }}"
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-RSA-KEY-Abiquo
+    enabled: yes
+
+- name: Create Updates Repo
+  yum_repository:
+    name: abiquo-updates
+    description: Abiquo update packages
+    file: abiquo-updates
+    baseurl: "{{ abiquo_updates_repo }}"
+    gpgcheck: "{{ abiquo_repository_gpg_check }}"
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-RSA-KEY-Abiquo
+    enabled: yes
+
+- name: Clear cache after repo modification
+  command: yum clean all
+  args:
+    warn: no
+
+- name: restart aim
+  service: name=abiquo-aim state=restarted
+
+- name: restart libvirt
+  service: name=libvirtd state=restarted
+
+- name: restart rpcbind
+  service: name=rpcbind state=restarted
+
+- name: restart emmett
+  service: name=abiquo-emmett state=restarted
+
+- name: restart delorean
+  service: name=abiquo-delorean state=restarted
+
+- name: liquibase watchtower
+  command: watchtower-db -h {{ abiquo_db_host }} -u {{ abiquo_db_user }} -p {{ abiquo_db_pass }} -P {{ abiquo_db_port }} update
+  notify: 
+    - restart emmett
+    - restart delorean
+
+- name: restart jasperserver
+  service: name=jasperserver state=restarted
+
+- name: restart abiquo-tomcat
+  service: name=abiquo-tomcat state=restarted
+
+- name: restart httpd
+  service: name=httpd state=restarted
+
+- name: restart cassandra
+  service: name=cassandra state=restarted
+
+- name: restart kairosdb
+  service: name=kairosdb state=restarted
+
+- name: restart mysql
+  service: name=mysql state=restarted
+
+- name: Start MariaDB Service
+  service: name=mysql state=started enabled=yes
+
+- name: Start RabbitMQ Service
+  service: name=rabbitmq-server state=started enabled=yes
+
+- name: Start Redis Server
+  service: name=redis state=started enabled=yes
+
+- name: restart rabbitmq
+  service: name=rabbitmq-server state=restarted
+
+- name: restart neutron-linuxbridge-agent
+  service: name=neutron-linuxbridge-agent state=restarted

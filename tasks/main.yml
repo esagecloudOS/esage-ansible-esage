@@ -1,0 +1,80 @@
+---
+- name: Get default vars
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "defaults/{{ abiquo_profile }}.yml"
+    - defaults/default.yml
+
+- include_tasks: repository.yml
+
+- include_tasks: firewall.yml
+
+- include_tasks: selfsigned.yml
+  vars:
+    cert_file: "{{ ui_cert_file }}"
+    key_file: "{{ ui_cert_key_file }}"
+    csr_file: "{{ ui_cert_csr_file }}"
+    cert_cn: "{{ ui_server_name }}"
+  when: (abiquo_profile == 'monolithic' or abiquo_profile == 'server' or abiquo_profile == 'frontend') and ui_cert_source == 'selfsigned'
+
+- include_tasks: frontend.yml
+  when: (abiquo_profile == 'monolithic' or abiquo_profile == 'frontend' or abiquo_profile == 'server') and abiquo_install_frontend
+
+- include_tasks: mariadb.yml
+  when: ((abiquo_profile == 'monolithic' or abiquo_profile == 'server') and abiquo_install_services) or (abiquo_profile == 'monitoring' and monitoring_install_mariadb)
+
+- include_tasks: database.yml
+  when: (abiquo_profile == 'monolithic' or abiquo_profile == 'server' or abiquo_profile == 'monitoring') and abiquo_install_database
+
+- include_tasks: rabbitmq.yml
+  when: (abiquo_profile == 'monolithic' or abiquo_profile == 'server') and abiquo_install_services
+
+- include_tasks: selfsigned.yml
+  vars:
+    cert_file: "{{ rabbitmq_conf_ssl_options_certfile }}"
+    key_file: "{{ rabbitmq_conf_ssl_options_keyfile }}"
+    csr_file: "{{ rabbitmq_conf_ssl_options_csrfile }}"
+    cert_cn: "{{ ansible_fqdn }}"
+    cert_for_rabbit: yes
+  when: (abiquo_profile == 'monolithic' or abiquo_profile == 'server') and abiquo_install_services and rabbitmq_selfsigned
+
+- include_tasks: redis.yml
+  when: (abiquo_profile == 'monolithic' or abiquo_profile == 'server' or abiquo_profile == 'remoteservices') and abiquo_install_services
+
+- include_tasks: cassandra.yml
+  when: abiquo_profile == 'monitoring' and abiquo_install_services
+
+- include_tasks: kairosdb.yml
+  when: abiquo_profile == 'monitoring' and abiquo_install_services
+
+- include_tasks: server.yml
+  when: abiquo_profile == 'monolithic' or abiquo_profile == 'server'
+
+- include_tasks: remoteservices.yml
+  when: abiquo_profile == 'monolithic' or abiquo_profile == 'remoteservices'
+
+- include_tasks: v2v.yml
+  when: abiquo_profile == 'monolithic' or abiquo_profile == 'v2v'
+
+- include_tasks: selfsigned.yml
+  vars:
+    cert_file: "{{ monitoring_watchtower_certfile }}"
+    key_file: "{{ monitoring_watchtower_keyfile }}"
+    csr_file: "{{ monitoring_watchtower_keyfile_csrfile }}"
+    cert_cn: "{{ ansible_fqdn }}"
+  when: abiquo_profile == 'monitoring' and watchtower_ssl
+
+- include_tasks: monitoring.yml
+  when: abiquo_profile == 'monitoring'
+
+- include_tasks: kvm.yml
+  when: abiquo_profile == 'kvm'
+
+- include_tasks: jce.yml
+  when: abiquo_profile == 'monolithic' or abiquo_profile == 'v2v' or abiquo_profile == 'remoteservices' or abiquo_profile == 'server'
+
+- include_tasks: properties.yml
+  when: abiquo_profile == 'monolithic' or abiquo_profile == 'v2v' or abiquo_profile == 'remoteservices' or abiquo_profile == 'server'
+
+- include_tasks: reporting.yml
+  when: abiquo_profile == 'reporting'

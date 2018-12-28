@@ -1,0 +1,42 @@
+---
+- name: Install curl and unzip packages
+  yum: name={{ item }} state=present
+  with_items:
+    - curl
+    - unzip
+
+- name: Create JCE dir
+  file:
+    path: /opt/jce
+    state: directory
+
+- name: Download Oracle Java 1.8 JCE package from Oracle web site
+  get_url: 
+    url: http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip
+    dest: /tmp/jce_policy-8.zip
+    headers: "Cookie:oraclelicense=accept-securebackup-cookie;"
+
+- name: Extract Oracle Java 1.8 JCE to destination path
+  unarchive:
+    remote_src: True
+    src: /tmp/jce_policy-8.zip
+    dest: /opt/jce
+    creates: /opt/jce/UnlimitedJCEPolicyJDK8
+
+- name: Check if JCE is already installed
+  shell: /usr/java/default/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
+  changed_when: false
+  ignore_errors: true
+  register: jce_check
+
+- name: install JCE policies
+  copy:
+    src: "/opt/jce/UnlimitedJCEPolicyJDK8/{{ item }}"
+    dest: "/usr/java/default/jre/lib/security/{{ item }}"
+    remote_src: True
+    mode: 0664
+  become: true
+  with_items:
+    - local_policy.jar
+    - US_export_policy.jar
+  when: jce_check.stdout == 'false'

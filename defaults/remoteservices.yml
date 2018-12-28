@@ -1,0 +1,21 @@
+---
+abiquo_default_properties:
+  abiquo.auth.module: abiquo
+  abiquo.datacenter.id: "{{ ansible_hostname }}"
+  abiquo.server.sessionTimeout: 60
+  abiquo.server.api.location: "https://{{ ansible_fqdn }}/api"
+  abiquo.redis.port: 6379
+  abiquo.redis.host: 127.0.0.1
+  abiquo.rabbitmq.addresses: "{{ abiquo_rabbitmq_addresses }}"
+  abiquo.rabbitmq.password: "{{ abiquo_rabbitmq_password }}"
+  abiquo.rabbitmq.username: "{{ abiquo_rabbitmq_username }}"
+  abiquo.rabbitmq.virtualHost: "{{ abiquo_rabbitmq_vhost }}"
+  abiquo.appliancemanager.localRepositoryPath: /opt/vm_repository
+  abiquo.appliancemanager.repositoryLocation: 127.0.0.1:/opt/vm_repository
+  abiquo.virtualfactory.hyperv.repositoryLocation: //127.0.0.1/vm_repository
+  abiquo.virtualfactory.xenserver.repositoryLocation: 127.0.0.1:/opt/vm_repository
+abiquo_fw_allowed_ports:
+  - "6379"
+  - "8009"
+  - "8010"
+  - "4822"

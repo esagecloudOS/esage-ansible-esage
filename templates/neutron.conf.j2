@@ -1,0 +1,42 @@
+[DEFAULT]
+verbose = True
+
+core_plugin = ml2
+service_plugins = router,lbaas
+allow_overlapping_ips = True
+
+rabbit_userid={{ abiquo_aim_neutron_rabbit_userid }}
+rabbit_password={{ abiquo_aim_neutron_rabbit_password }}
+
+[matchmaker_redis]
+
+[matchmaker_ring]
+
+[quotas]
+
+[agent]
+
+[keystone_authtoken]
+auth_uri = {{ abiquo_aim_neutron_auth_uri }}
+identity_uri = {{ abiquo_aim_neutron_identity_uri }}
+admin_tenant_name = {{ abiquo_aim_neutron_admin_tenant_name }}
+admin_user = {{ abiquo_aim_neutron_admin_user }}
+admin_password = {{ abiquo_aim_neutron_admin_password }}
+
+[database]
+
+[nova]
+
+[oslo_concurrency]
+
+lock_path = $state_path/lock
+
+[oslo_policy]
+
+[oslo_messaging_amqp]
+
+[oslo_messaging_qpid]
+
+[oslo_messaging_rabbit]
+
+rabbit_host = {{ abiquo_aim_neutron_rabbit_host }}

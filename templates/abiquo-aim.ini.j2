@@ -1,0 +1,15 @@
+# AIM configuration file
+
+[server]
+port = {{ abiquo_aim_port }}
+
+[rimp]
+repository = {{ abiquo_aim_repository_path }}
+datastore = {{ abiquo_aim_datastore }}
+autoBackup = {{ abiquo_aim_autobackup }}
+autoRestore = {{ abiquo_aim_autorestore }}
+datastoreValidTypes = {{ abiquo_aim_filesystems }}
+
+[vlan]
+ifconfigCmd = {{ abiquo_aim_ifconfig_cmd }}
+brctlCmd = {{ abiquo_aim_brctl_cmd }}

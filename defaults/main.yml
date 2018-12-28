@@ -1,0 +1,243 @@
+---
+# Abiquo
+abiquo_profile: monolithic
+abiquo_version: "4.4"
+abiquo_base_repo: http://mirror.abiquo.com/el$releasever/{{ abiquo_version }}/os/x86_64
+abiquo_updates_repo: http://mirror.abiquo.com/el$releasever/{{ abiquo_version }}/updates/x86_64
+abiquo_repository_gpg_check: 1
+
+# Credentials for ansible DB access
+abiquo_db_login_host: localhost
+abiquo_db_login_port: 3306
+abiquo_db_login_user: root
+abiquo_db_login_pass: ''
+
+# Server database access config.
+abiquo_db_user: abiquo
+abiquo_db_pass: abiquo
+abiquo_db_host: localhost
+abiquo_db_port: 3306
+abiquo_db_from: '%'
+abiquo_jdbc_str: "{{ abiquo_db_host }}:{{ abiquo_db_port }}"
+
+# RabbitMQ access config
+abiquo_rabbitmq_addresses: 127.0.0.1:5672
+abiquo_rabbitmq_password: abiquo
+abiquo_rabbitmq_username: abiquo
+abiquo_rabbitmq_vhost: /
+
+# Abiquo properties
+# A set of default properties is used based on selected profile
+# using `defaults/{{profile}}.yml`. This is to specify additional
+# properties that will be merged with defaults.
+abiquo_properties: {}
+
+# Services refer to supporting services like MariaDB,
+# RabbitMQ, Redis, etc.
+abiquo_install_services: true
+
+# Set to false if you are connecting to an already
+# populated database
+abiquo_install_database: true
+
+# Whether or not to install the frontend (UI)
+# components in a server installation
+abiquo_install_frontend: true
+
+# Frontend
+ui_server_name: "{{ ansible_fqdn }}"
+ui_server_alias: "{{ ansible_hostname }}"
+ui_proxy_timeout: 3600
+# UI Apache configuration
+ui_apache_opts: {}
+ui_apache_opts_raw: ""
+ui_proxies: {}
+
+# Wheter or not to generate a self signed certificate
+# for this host. If not, provide path to certificate,
+# private key and optionally a CA cert. The cookbook
+# does not manage the certificate files path provided
+# for non generated certificates.
+#
+# Set this to any other value will skip selfsigned 
+# cert generation
+ui_cert_source: selfsigned
+
+# When using self signed certificates, these are the paths for
+# the certificate files. Otherwise, they will point to already
+# existing certificates.
+ui_cert_file: /etc/pki/abiquo/{{ ui_server_name }}.crt
+ui_cert_key_file: /etc/pki/abiquo/{{ ui_server_name }}.key
+ui_cert_csr_file: /etc/pki/abiquo/{{ ui_server_name }}.csr
+# ui_cert_ca_file: ...
+
+# UI app configuration attributes. These attributes will be rendered
+# in /var/www/html/ui/config/client-config-custom.json
+ui_config:
+  config.endpoint: ""
+
+# KVM
+vm_repository_path: ''
+abiquo_aim_port: 8889
+abiquo_aim_repository_path: /opt/vm_repository
+abiquo_aim_datastore: /var/lib/virt
+abiquo_aim_autobackup: false
+abiquo_aim_autorestore: false
+abiquo_aim_filesystems: ext2,ext3,ext4,nfs,nfs4,xfs,smbf,gfs
+abiquo_aim_ifconfig_cmd: /sbin/ifconfig
+abiquo_aim_brctl_cmd: /usr/sbin/brctl
+abiquo_aim_include_neutron: no
+abiquo_aim_neutron_rabbit_userid: abiquo
+abiquo_aim_neutron_rabbit_password: abiquo
+abiquo_aim_neutron_rabbit_host: localhost
+abiquo_aim_neutron_auth_uri: http://localhost:5000/v2.0
+abiquo_aim_neutron_identity_uri: http://localhost:35357
+abiquo_aim_neutron_admin_tenant_name: services
+abiquo_aim_neutron_admin_user: neutron
+abiquo_aim_neutron_admin_password: xabiquo
+abiquo_aim_neutron_vlan_ranges: abq-vlans:2:4094
+abiquo_aim_neutron_interface_mappings: external:eth0,abq-vlans:eth1
+
+# RabbitMQ
+rabbitmq_plugins:
+  - rabbitmq_management
+rabbitmq_ssl: false
+rabbitmq_selfsigned: true
+rabbitmq_conf_tcp_listeners_address: '0.0.0.0'
+rabbitmq_conf_tcp_listeners_port: 5672
+rabbitmq_conf_ssl_listeners_address: '0.0.0.0'
+rabbitmq_conf_ssl_listeners_port: 5671
+rabbitmq_conf_ssl_options_cacertfile: "/etc/rabbitmq/ssl/{{ ansible_fqdn }}.crt"
+rabbitmq_conf_ssl_options_certfile: "/etc/rabbitmq/ssl/{{ ansible_fqdn }}.crt"
+rabbitmq_conf_ssl_options_csrfile: "/etc/rabbitmq/ssl/{{ ansible_fqdn }}.csr"
+rabbitmq_conf_ssl_options_keyfile: "/etc/rabbitmq/ssl/{{ ansible_fqdn }}.key"
+rabbitmq_conf_ssl_options_fail_if_no_peer_cert: "false"
+
+# KairosDB
+abiquo_monitoring_kairosdb_address: localhost
+abiquo_monitoring_kairosdb_port: 8080
+
+# RabbitMQ configuration for Watchtower
+abiquo_monitoring_rabbitmq_addresses: localhost:5672
+abiquo_monitoring_rabbitmq_username: abiquo
+abiquo_monitoring_rabbitmq_password: abiquo
+abiquo_monitoring_rabbitmq_vhost: /
+
+# Watchtower SSL
+monitoring_watchtower_certfile: /etc/pki/abiquo/{{ ansible_fqdn }}.crt
+monitoring_watchtower_keyfile: /etc/pki/abiquo/{{ ansible_fqdn }}.key
+monitoring_watchtower_keyfile_csrfile: /etc/pki/abiquo/{{ ansible_fqdn }}.csr
+watchtower_ssl: false
+
+# Monitoring Database
+abiquo_monitoring_db_user: abiquo
+abiquo_monitoring_db_pass: abiquo
+abiquo_monitoring_db_host: localhost
+abiquo_monitoring_db_port: 3306
+abiquo_monitoring_db_from: 'localhost'
+abiquo_monitoring_jdbc_str: "{{ abiquo_db_host }}:{{ abiquo_db_port }}"
+monitoring_install_mariadb: yes
+
+# Cassandra
+cassandra_config: {}
+
+# KairosDB
+kairosdb_config_file_path: /opt/kairosdb/conf/kairosdb.properties
+kariosdb_cassandra_rpc_port: 9160
+kariosdb_cassandra_rpc_address: "{{ ansible_default_ipv4.address }}"
+
+# Reporting
+# JasperServer
+jasperserver_install_files: /opt/jasper
+jasperserver_zip_url: https://downloads.sourceforge.net/project/jasperserver/JasperServer/JasperReports%20Server%20Community%20Edition%206.4.2/TIB_js-jrs-cp_6.4.2_bin.zip
+jasperserver_tomcat_server_port: 8080
+jasperserver_tomcat_server_shutdown_port: 8005
+jasperserver_tomcat_server_ajp_port: 8009
+jasperserver_tomcat_server_proxy_port: 8888
+
+# Reporting Abiquo
+abiquo_reporing_install_slave: yes
+abiquo_reporting_core_url: nil
+abiquo_reporting_db_host: localhost
+abiquo_reporting_db_username: root
+abiquo_reporting_db_password: ''
+abiquo_reporting_db_port: 3306
+
+# MariaDB
+mariadb_config: {}
+default_mariadb_config:
+  client:
+    port: 3306
+    socket: /var/lib/mysql/mysql.sock
+
+  mysqld_safe:
+    socket: /var/lib/mysql/mysql.sock
+    nice: 0
+
+  mysqld:
+    user: mysql
+    socket: /var/lib/mysql/mysql.sock
+    bind-address: 0.0.0.0
+    port: 3306
+    default_storage_engine: InnoDB
+    basedir: /usr
+    datadir: /var/lib/mysql
+    tmpdir: /var/tmp
+    lc_messages_dir: /usr/share/mysql
+    lc_messages: en_US
+    max_connections: 100
+    connect_timeout: 5
+    wait_timeout: 600
+    max_allowed_packet: 16M
+    thread_cache_size: 128
+    sort_buffer_size: 4M
+    bulk_insert_buffer_size: 16M
+    tmp_table_size: 32M
+    max_heap_table_size: 32M
+    myisam_recover: BACKUP
+    key_buffer_size: 128M
+    table_open_cache: 400
+    myisam_sort_buffer_size: 512M
+    concurrent_insert: 2
+    read_buffer_size: 2M
+    read_rnd_buffer_size: 1M
+    query_cache_limit: 128K
+    query_cache_size: 64M
+    log_warnings: 2
+    slow_query_log_file: /var/log/mysql/mariadb-slow.log
+    long_query_time: 10
+    log_slow_verbosity: query_plan
+    innodb_buffer_pool_size: 256M
+    innodb_log_buffer_size: 8M
+    innodb_file_per_table: 1
+    innodb_open_files: 400
+    innodb_io_capacity: 400
+    innodb_flush_method: O_DIRECT
+    log_bin: /var/log/mysql/mariadb-bin
+    sync_binlog: 0
+    log_bin_index: /var/log/mysql/mariadb-bin.index
+    expire_logs_days: 10
+    max_binlog_size: 100M
+    server-id: 1
+    binlog_format: ROW
+    skip-external-locking:
+
+  mysqldump:
+    max_allowed_packet: 16M
+
+  isamchk:
+    key_buffer: 16M
+
+# geerlingguy.firewall
+firewall_state: started
+firewall_enabled_at_boot: true
+firewall_disable_firewalld: false
+firewall_disable_ufw: false
+default_firewall_allowed_tcp_ports:
+  - "22"
+default_firewall_additional_rules:
+  - "iptables -P INPUT DROP"
+abiquo_fw_allowed_ports: []
+fw_additional_ports: []
+abiquo_fw_additional_rules: []
+fw_additional_rules: []

@@ -1,0 +1,103 @@
+---
+- name: Install Abiquo packages for an API server
+  yum: name={{ item }} state=present
+  with_items:
+    - abiquo-server
+    - abiquo-sosreport-plugins
+    - MariaDB-client
+  register: pkginstall
+
+- name: Ensure abiquo/config folder exists
+  file: path=/opt/abiquo/config state=directory
+
+- name: Ensure fragments folder exists
+  file: path=/var/lib/abiquo-fragments state=directory
+
+- set_fact:
+    pwdflag: "-p{{ abiquo_db_pass }}"
+  when: abiquo_db_pass is defined
+
+- set_fact:
+    mysql_command: "mysql -h{{ abiquo_db_host }} -P{{ abiquo_db_port }} -u{{ abiquo_db_user }} {{ pwdflag is defined | ternary(pwdflag,'') }} "
+
+- name: Check kinton DB state
+  shell: "{{ mysql_command }} -Nse \"SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'kinton'\""
+  register: kinton_table_count
+
+- name: Create kinton schema.
+  mysql_db:
+    name: kinton
+    state: present
+    login_host: "{{ abiquo_db_host }}"
+    login_port: "{{ abiquo_db_port }}"
+    login_user: "{{ abiquo_db_user }}"
+    login_password: "{{ abiquo_db_pass }}"
+  register: kinton_created
+
+- name: Ensure MySQL databases are present.
+  mysql_db:
+    name: kinton
+    state: import
+    login_host: "{{ abiquo_db_host }}"
+    login_port: "{{ abiquo_db_port }}"
+    login_user: "{{ abiquo_db_user }}"
+    login_password: "{{ abiquo_db_pass }}"
+    target: /usr/share/doc/abiquo-model/database/kinton-schema.sql
+  when: kinton_created.changed or kinton_table_count.stdout == '0'
+
+- name: Set DB configuration in tomcat
+  template:
+    src: api-m.xml.j2
+    dest: /opt/abiquo/tomcat/conf/Catalina/localhost/{{ item }}.xml
+    owner: tomcat
+    group: tomcat
+    mode: 0644
+  with_items:
+    - api
+    - m
+  notify: restart abiquo-tomcat
+
+- name: Dummy properties file so liquibase will run
+  copy:
+    content: ""
+    dest: /opt/abiquo/config/abiquo.properties
+    force: no
+
+- name: Run liquibase update
+  shell: abiquo-db -h {{ abiquo_db_host }} -u {{ abiquo_db_user }} -p {{ abiquo_db_pass }} -P {{ abiquo_db_port }} update
+  notify: restart abiquo-tomcat
+  when: pkginstall.changed or kinton_created.changed
+
+- name: Obtain m_user default password
+  shell: "{{ mysql_command }} kinton -Nse \"select COMMENTS from DATABASECHANGELOG where ID = 'default_user_for_m'\""
+  register: abiquo_default_outbound_api_user_password
+
+- name: Import SSL certificate from API endpoint into Java keystore
+  block:
+    - java_cert:
+        cert_url: "{{ ui_server_name }}"
+        keystore_path: /usr/java/default/jre/lib/security/cacerts
+        keystore_pass: changeit
+      notify: restart abiquo-tomcat
+      register: certimported
+      when: ui_cert_source == "selfsigned"
+  rescue:
+    - debug:
+        msg: "Could not fetch certificate from {{ ui_server_name }}... Moving on..."
+
+- debug:
+    msg: "ui_cert_source: {{ ui_cert_source }}"
+
+- name: Import SSL certificate into Java keystore
+  java_cert:
+    cert_path: "{{ ui_cert_file }}"
+    keystore_path: /usr/java/default/jre/lib/security/cacerts
+    keystore_pass: changeit
+    cert_alias: abiquo_ui_cert
+  notify: restart abiquo-tomcat
+  register: certimported
+  when: ui_cert_source != "selfsigned"
+
+- name: Force tomcat restart for cert import
+  meta: flush_handlers
+  when: certimported.changed

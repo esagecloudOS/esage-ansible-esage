@@ -1,0 +1,3 @@
+---
+abiquo_profile: kvm
+abiquo_aim_include_neutron: yes

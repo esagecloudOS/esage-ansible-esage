@@ -1,0 +1,7 @@
+---
+- name: Include FW role
+  include_role:
+    name: geerlingguy.firewall
+  vars:
+    firewall_allowed_tcp_ports: "{{ default_firewall_allowed_tcp_ports }} + {{ abiquo_fw_allowed_ports }} + {{ fw_additional_ports }}"
+    firewall_additional_rules: "{{ default_firewall_additional_rules }} + {{ abiquo_fw_additional_rules }} + {{ fw_additional_rules }}"

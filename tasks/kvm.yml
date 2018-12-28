@@ -1,0 +1,71 @@
+---
+- name: Install QEMU EV release on CentOS 7
+  yum: name=centos-release-qemu-ev state=present
+  when: ansible_distribution_major_version|int >= 7
+
+- name: Install QEMU EV CentOS 7
+  yum: name=qemu-kvm-ev state=present
+  when: ansible_distribution_major_version|int >= 7
+
+- name: Install QEMU CentOS 6
+  yum: name=qemu-kvm state=present
+  when: ansible_distribution_major_version|int < 7
+
+- name: Install Abiquo packages for KVM
+  yum: name={{ item }} state=present
+  with_items:
+    - abiquo-aim
+    - abiquo-sosreport-plugins
+
+- stat:
+    path: /usr/bin/qemu-system-x86_64
+  register: qemusys
+
+- name: Link qemu-system-x86_64 to /usr/libexec/qemu-kvm
+  file:
+    src: /usr/libexec/qemu-kvm
+    dest: /usr/bin/qemu-system-x86_64
+    state: link
+  when: ansible_distribution_major_version|int >= 7
+
+- name: Link qemu-system-x86_64 to /usr/bin/qemu-kvm
+  file:
+    src: /usr/bin/qemu-kvm
+    dest: /usr/bin/qemu-system-x86_64
+    state: link
+  when: ansible_distribution_major_version|int < 7
+
+- name: Ensure NFS utilities are installed.
+  yum: name=nfs-utils state=present
+  notify: restart rpcbind
+
+- name: "Create {{ abiquo_aim_repository_path }}"
+  file:
+    path: "{{ abiquo_aim_repository_path }}"
+    state: directory
+
+- name: Mount VM repo
+  mount:
+    path: "{{ abiquo_aim_repository_path }}"
+    src: "{{ vm_repository_path }}"
+    fstype: nfs
+    opts: defaults
+    state: mounted
+  when: vm_repository_path != ''
+
+- name: Abiquo AIM configuration
+  template: src=abiquo-aim.ini.j2 dest=/etc/abiquo-aim.ini
+  notify:
+    - restart libvirt
+    - restart aim
+
+- name: Enable and start services
+  service: name={{ item }} state=started enabled=yes
+  with_items:
+    - libvirtd
+    - abiquo-aim
+    - rpcbind
+
+- name: Include neutron packages if requested
+  include_tasks: kvm_neutron.yml
+  when: abiquo_aim_include_neutron

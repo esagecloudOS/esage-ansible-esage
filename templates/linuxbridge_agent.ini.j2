@@ -1,0 +1,8 @@
+[securitygroup]
+firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver
+
+[LINUX_BRIDGE]
+physical_interface_mappings = {{ abiquo_aim_neutron_interface_mappings }}
+
+[VXLAN]
+enable_vxlan = false

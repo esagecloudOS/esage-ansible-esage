@@ -1,0 +1,63 @@
+---
+- name: Install Tomcat and Java
+  yum: name={{ item }} state=present
+  with_items:
+    - unzip
+    - jdk
+    - abiquo-core
+
+- name: Ensure JasperServer install files directory exists
+  file:
+    path: "{{ jasperserver_install_files }}"
+    state: directory
+
+- name: Download JasperServer
+  get_url:
+    url: "{{ jasperserver_zip_url }}"
+    dest: "{{ jasperserver_install_files }}/jasper.zip"
+    mode: 0644
+    force: no
+  register: jasperdownload
+
+- name: Extract JasperServer files
+  unarchive:
+    remote_src: True
+    src: "{{ jasperserver_install_files }}/jasper.zip"
+    dest: "{{ jasperserver_install_files }}"
+  when: jasperdownload.changed
+
+- name: Get JasperServer installation dir
+  shell: "find {{ jasperserver_install_files }} -maxdepth 1 -type d | egrep -v \"^{{ jasperserver_install_files }}$\" | grep jasperreports-server-cp"
+  register: lsjasperinstall
+
+- name: Set JasperServer install config file
+  template:
+    src: jasper_default_master.properties.j2
+    dest: "{{ lsjasperinstall.stdout }}/buildomatic/default_master.properties"
+  register: jasper_config
+
+- name: Run JasperServer installation
+  shell: ./js-install-ce.sh minimal
+  args:
+    chdir: "{{ lsjasperinstall.stdout }}/buildomatic"
+    creates: /opt/abiquo/tomcat/webapps/jasperserver
+  when: jasper_config.changed
+  register: jasperinstallrun
+
+- name: Fix permissions in webapps folder
+  file: 
+    path: /opt/abiquo/tomcat
+    owner: tomcat
+    group: tomcat
+    recurse: yes
+  when: jasperinstallrun.changed
+
+- name: Configure JasperServer tomcat
+  template: 
+    src: server.xml.j2
+    dest: "/opt/abiquo/tomcat/conf/server.xml"
+    mode: 0644
+  notify: restart abiquo-tomcat
+
+- name: Start JasperServer
+  service: name=abiquo-tomcat state=started enabled=yes

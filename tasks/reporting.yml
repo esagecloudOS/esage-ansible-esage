@@ -1,0 +1,65 @@
+---
+- include_tasks: mariadb_slave.yml
+  when: abiquo_reporing_install_slave
+
+- include_tasks: jasper.yml
+
+- name: Install MariaDB Clients
+  yum: name={{ item }} state=present
+  with_items:
+    - MariaDB-client
+    - MySQL-python
+
+- name: Download Abiquo reporting module
+  get_url:
+    url: "{{ abiquo_reporting_core_url }}"
+    dest: "{{ jasperserver_install_files }}/abiquo-reporting-core.zip"
+    mode: 0644
+    force: no
+  register: download
+
+- name: Install unzip to deflate reports zip file
+  yum: name=unzip state=present
+
+- name: Ensure extract directory exists
+  file:
+    path: "{{ jasperserver_install_files }}/abiquo-reporting-core"
+    state: directory
+
+- name: Extract Abiquo reporting module
+  unarchive:
+    remote_src: True
+    src: "{{ jasperserver_install_files }}/abiquo-reporting-core.zip"
+    dest: "{{ jasperserver_install_files }}/abiquo-reporting-core"
+  when: download.changed
+  register: zipextracted
+
+- name: Get JasperServer installation dir
+  shell: "find {{ jasperserver_install_files }} -maxdepth 1 -type d | egrep -v \"^{{ jasperserver_install_files }}$\" | grep jasperreports-server-cp"
+  register: lsjasperinstall
+
+- name: Replace reports install script
+  copy:
+    src: reports-install.sh
+    dest: "{{ jasperserver_install_files }}/abiquo-reporting-core/install.sh"
+    mode: 0755
+
+- name: Adjust installation script
+  replace:
+    path: "{{ jasperserver_install_files }}/abiquo-reporting-core/install.sh"
+    regexp: '^JASPERPATH=.*$'
+    replace: "JASPERPATH={{ lsjasperinstall.stdout }}"
+    backup: yes
+
+- set_fact:
+    reporting_db_pwdflag: "-p {{ abiquo_reporting_db_password }}"
+  when: abiquo_reporting_db_password is defined and abiquo_reporting_db_password != ""
+
+- set_fact:
+    install_reports_command: "./install.sh -h {{ abiquo_reporting_db_host }} -P {{ abiquo_reporting_db_port }} -u {{ abiquo_reporting_db_username }} {{ reporting_db_pwdflag is defined | ternary(reporting_db_pwdflag,'') }} "
+
+- name: Run Abiquo reporting core installation script
+  shell: "{{ install_reports_command }}"
+  args:
+    chdir: "{{ jasperserver_install_files }}/abiquo-reporting-core"
+  when: zipextracted.changed

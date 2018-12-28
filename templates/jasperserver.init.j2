@@ -1,0 +1,50 @@
+#!/bin/bash
+#
+# jasperserver
+#
+# chkconfig: 2345 95 15
+#
+# description: Jaspersoft Reports Server
+#
+# Start/Stop of JasperReports Server
+#
+
+JASPER_HOME={{ jasperserver_prefix }}
+
+# root is required by the JasperServer ctlscript.sh
+JASPER_USER=root
+ 
+case "$1" in
+  start) 
+    if [ -f $JASPER_HOME/ctlscript.sh ]; then
+      echo "Starting JasperServer"
+      $JASPER_HOME/ctlscript.sh start
+      RETVAL=$?
+    fi
+    ;; 
+  stop) 
+    if [ -f $JASPER_HOME/ctlscript.sh ]; then
+      echo "Stopping JasperServer"
+      $JASPER_HOME/ctlscript.sh stop
+      RETVAL=$?
+    fi
+    ;; 
+  restart) 
+    if [ -f $JASPER_HOME/ctlscript.sh ]; then
+      echo "Restarting JasperServer"
+      $JASPER_HOME/ctlscript.sh restart
+      RETVAL=$?
+    fi
+    ;; 
+  status) 
+    if [ -f $JASPER_HOME/ctlscript.sh ]; then
+      $JASPER_HOME/ctlscript.sh status
+      RETVAL=$?
+    fi
+    ;; 
+  *) 
+    echo $"Usage: $0 {start|stop|restart|status}"
+    exit 1 
+    ;; 
+esac
+exit $RETVAL

@@ -1,0 +1,27 @@
+---
+- name: Install MariaDB
+  yum: name={{ item }} state=present
+  with_items:
+    - MariaDB-server
+    - MariaDB-client
+    - MySQL-python
+
+- name: Enable MariaDB service
+  service: name=mysql enabled=yes
+
+- name: "MariaDB configuration file {{ item.key }}.cnf"
+  template:
+    src: cnf.j2
+    dest: /etc/my.cnf.d/{{ item.key }}.cnf
+  with_dict: "{{ default_mariadb_config | combine(mariadb_config) }}"
+  notify: restart mysql
+
+- name: Ensure /var/log/mysql folder exists
+  file:
+    path: /var/log/mysql
+    owner: mysql
+    group: mysql
+    state: directory
+
+- name: Ensure MariaDB config is applied
+  meta: flush_handlers
